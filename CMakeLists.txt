@@ -9,7 +9,6 @@ project(demo_manager)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
 
-demo_controllers
 controller_manager
 controller_manager_msgs
 
@@ -107,7 +106,7 @@ controller_manager_msgs
 catkin_package(
   INCLUDE_DIRS include
  
-  LIBRARIES demo_manager
+  #LIBRARIES demo_manager
  
   CATKIN_DEPENDS 
   demo_controllers
@@ -158,7 +157,6 @@ add_executable(${PROJECT_NAME} src/demo_manager_node.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  demo_controllers
 )
 
 #############
