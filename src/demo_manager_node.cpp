@@ -21,6 +21,18 @@ int main(int argc, char** argv) {
 
     if(ok)
         std::cout << "Lo switch dei controller è stato effettuato!" << std::endl;
+
+    
+
+
+
+
+
+
+
+
+
+    
     return 0;
 
 }
