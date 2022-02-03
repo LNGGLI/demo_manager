@@ -9,22 +9,40 @@
 
 #include <ros/ros.h>
 
-#include <std_msgs/Float64MultiArray.h>
+#include <trajectory_msgs/JointTrajectoryPoint.h>
 #include <sensor_msgs/JointState.h>
 
 
 
 using namespace demo_manager;
 
-std::array<double, 7> q_goal{{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-std::array<double, 7> q_init{{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-// TODO: rosservice list -n per vedere che nodo offre lo switch
+
 int main(int argc, char** argv) {
 
     ros::init(argc, argv, "demo_manager_node");
     ros::NodeHandle nh;
+    ros::Publisher command_pb = nh.advertise<trajectory_msgs::JointTrajectoryPoint>("joint_commands", 1);
+    ros::Subscriber state_sub = nh.subscribe<sensor_msgs::JointState>("/franka_state_controller/joint_states",1,stateCB);
+    
+    ros::Rate loop_rate(1000); // 1kHz
 
-    std::string start_controller = "joint_reconfiguration_demo";
+    while(!initial_read){
+        ros::spinOnce();
+        ros::Duration(0.1).sleep();
+        
+    }
+    
+    std::cout << "Configurazione iniziale acquisita: \n";
+    std::cout << "q0 = " << q_init[0]<< "\n";
+    std::cout << "q1 = " << q_init[1]<< "\n";
+    std::cout << "q2 = " << q_init[2]<< "\n";
+    std::cout << "q3 = " << q_init[3]<< "\n";
+    std::cout << "q4 = " << q_init[4]<< "\n";
+    std::cout << "q5 = " << q_init[5]<< "\n";
+    std::cout << "q6 = " << q_init[6]<< "\n";
+
+    
+    std::string start_controller = "joint_reconfiguration_pilotato";
     std::string stop_controller = "";
     bool ok = switch_controller(start_controller,stop_controller);
 
@@ -33,43 +51,43 @@ int main(int argc, char** argv) {
     else
         std::cout << "Lo switch dei controller non è andato a buon fine " << std::endl;
 
-    ros::Publisher command_pb = nh.advertise<std_msgs::Float64MultiArray>("joint_commands", 1);
-    //ros::Subscriber state_sub = nh.subscribe<sensor_msgs::JointState>();
-
-
-    ros::Rate loop_rate(1000);
+    
+    
     double begin = ros::Time::now().toSec();
     double t;
     
 
-    while (ros::ok())
+    while (ros::ok() && t < Tf)
     {
         
         t = ros::Time::now().toSec() - begin; // tempo trascorso
-        double tau = t/demo_manager::Tf; // asse dei tempi normalizzato
+        double tau = t/Tf; // asse dei tempi normalizzato
 
-        std_msgs::Float64MultiArray command_msg;
+        trajectory_msgs::JointTrajectoryPoint command_msg;
 
         if(tau<1){ 
         // Costruzione del messaggio che invia il comando q(t) = q_init + (q_goal - q_init)*q(t/tf)
             for(int i = 0; i< 7; i++){
-                command_msg.data.push_back(q_init[i] + (q_goal[i] - q_init[i])*(6*pow(tau,5)-15*pow(tau,4)+10*pow(tau,3)) );
+                command_msg.positions.push_back(q_init[i] + (q_goal[i] - q_init[i])*(6*pow(tau,5)-15*pow(tau,4)+10*pow(tau,3)) );
                 }
         }
         else{
             for(int i = 0; i< 7; i++){
-                command_msg.data.push_back(q_goal[i]);
+                command_msg.positions.push_back(q_goal[i]);
                 }
         }
 
-
         command_pb.publish(command_msg);
 
-        ros::spinOnce();
         loop_rate.sleep();
         
     }
 
+    start_controller="";
+    stop_controller="joint_reconfiguration_pilotato";
+    switch_controller(start_controller,stop_controller);
+    
+        
 
 
 
