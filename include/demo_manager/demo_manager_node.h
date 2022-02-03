@@ -16,6 +16,8 @@ using controller_manager_msgs::SwitchControllerResponse;
 
 namespace demo_manager{
 
+    double Tf = 10;
+
     bool switch_controller(const std::string& start_controller, const std::string& stop_controller){
 
         SwitchControllerRequest switch_req;
