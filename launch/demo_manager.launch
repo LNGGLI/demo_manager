@@ -2,12 +2,20 @@
 <launch>
   <arg name="robot_ip" />
   <arg name="load_gripper" default="true" />
+  
+  <!-- Load del franka_control e del gripper  -->
   <include file="$(find franka_control)/launch/franka_control.launch" >
     <arg name="robot_ip" value="$(arg robot_ip)" />
     <arg name="load_gripper" value="$(arg load_gripper)" />
   </include>
-
+  
+  <!-- Load dei parametri dei controller -->
   <rosparam command="load" file="$(find demo_controllers)/config/demo_controllers.yaml" />
-  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="--stopped joint_reconfiguration_pilotato"/>
-   <node name="demo_manager" pkg="demo_manager" type="demo_manager"/> 
+  
+  <!-- Load dei controller -->
+  <node name="reconfiguration_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="--stopped joint_reconfiguration_pilotato"/>
+  <node name="movement_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="--stopped cartesian_movement_controller_demo"/>
+  
+  <!-- RUn del manager -->
+  <node name="demo_manager" pkg="demo_manager" type="demo_manager"/> 
 </launch>

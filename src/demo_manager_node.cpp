@@ -4,17 +4,26 @@
 #include <stdexcept>
 #include <string>
 
+// Server , Actions 
 #include <realtime_tools/realtime_publisher.h>
 #include <demo_manager/demo_manager_node.h>
 
-#include <ros/ros.h>
 
+
+// Utils
+#include <ros/ros.h>
+#include <franka_gripper/franka_gripper.h>
+#include <actionlib/client/simple_action_client.h>
+
+// Messages
 #include <trajectory_msgs/JointTrajectoryPoint.h>
 #include <sensor_msgs/JointState.h>
 
 
 
 using namespace demo_manager;
+using franka_gripper::HomingAction;
+using HomingClient = actionlib::SimpleActionClient<HomingAction>;
 
 
 int main(int argc, char** argv) {
@@ -23,7 +32,9 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
     ros::Publisher command_pb = nh.advertise<trajectory_msgs::JointTrajectoryPoint>("joint_commands", 1);
     ros::Subscriber state_sub = nh.subscribe<sensor_msgs::JointState>("/franka_state_controller/joint_states",1,stateCB);
-    
+    HomingClient homing_client("franka_gripper/homing",true);
+
+
     ros::Rate loop_rate(1000); // 1kHz
 
     while(!initial_read){
@@ -78,9 +89,32 @@ int main(int argc, char** argv) {
         
     }
 
-    start_controller="";
+    
+    // Connessione al gripper
+    bool homing_connected_before_timeout = homing_client.waitForServer(ros::Duration(2.0));
+    ROS_INFO("Action server started, sending goal.");
+
+    // Homing del gripper
+    homing_client.sendGoal(franka_gripper::HomingGoal());
+
+    // wait for the action to return (30 s)
+    bool finished_before_timeout = homing_client.waitForResult(ros::Duration(30.0));
+
+    if (finished_before_timeout)
+    {
+        actionlib::SimpleClientGoalState state = homing_client.getState();
+        ROS_INFO("Action finished: %s",state.toString().c_str());
+    }
+
+    else
+        ROS_INFO("Action did not finish before the time out.");
+
+    start_controller="cartesian_movement_controller_demo";
     stop_controller="joint_reconfiguration_pilotato";
-    switch_controller(start_controller,stop_controller);
+    ok = switch_controller(start_controller,stop_controller);
+
+    if(ok)
+        ROS_INFO("Attivato cartesian_movement_controller_demo"); 
     
         
 
