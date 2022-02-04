@@ -33,14 +33,9 @@ int main(int argc, char** argv) {
     }
     
     std::cout << "Configurazione iniziale acquisita: \n";
-    std::cout << "q0 = " << q_init[0]<< "\n";
-    std::cout << "q1 = " << q_init[1]<< "\n";
-    std::cout << "q2 = " << q_init[2]<< "\n";
-    std::cout << "q3 = " << q_init[3]<< "\n";
-    std::cout << "q4 = " << q_init[4]<< "\n";
-    std::cout << "q5 = " << q_init[5]<< "\n";
-    std::cout << "q6 = " << q_init[6]<< "\n";
-
+    for(int i = 0 ; i < 7 ; i++)
+        std::cout << "q" << i+1 << "= " << q_init[i]<< "\n";
+    
     
     std::string start_controller = "joint_reconfiguration_pilotato";
     std::string stop_controller = "";
