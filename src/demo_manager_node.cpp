@@ -22,8 +22,8 @@
 
 
 using namespace demo_manager;
-using franka_gripper::HomingAction;
-using HomingClient = actionlib::SimpleActionClient<HomingAction>;
+using franka_gripper::GraspAction;
+using GraspClient = actionlib::SimpleActionClient<GraspAction>;
 
 
 int main(int argc, char** argv) {
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
     ros::Publisher command_pb = nh.advertise<trajectory_msgs::JointTrajectoryPoint>("joint_commands", 1);
     ros::Subscriber state_sub = nh.subscribe<sensor_msgs::JointState>("/franka_state_controller/joint_states",1,stateCB);
-    HomingClient homing_client("franka_gripper/homing",true);
+    GraspClient grasp_client("franka_gripper/grasp",true);
 
 
     ros::Rate loop_rate(1000); // 1kHz
@@ -89,20 +89,23 @@ int main(int argc, char** argv) {
         
     }
 
+    bool grasping_connected_before_timeout = grasp_client.waitForServer(ros::Duration(2.0));
+    ROS_INFO("Action server started, sending goal.");   
     
-    // Connessione al gripper
-    bool homing_connected_before_timeout = homing_client.waitForServer(ros::Duration(2.0));
-    ROS_INFO("Action server started, sending goal.");
+    // Parametri del gripper
+    auto grasp_goal = franka_gripper::GraspGoal();
+    grasp_goal.width = 0.011; // [m]
+    grasp_goal.speed = 0.05; // [m/s] 
+    grasp_goal.force = 60.0; // [N]
+    grasp_goal.epsilon.inner = 0.002;
+    grasp_goal.epsilon.outer = 0.002;
 
-    // Homing del gripper
-    homing_client.sendGoal(franka_gripper::HomingGoal());
-
-    // wait for the action to return (30 s)
-    bool finished_before_timeout = homing_client.waitForResult(ros::Duration(30.0));
-
+    // Invio del comando    
+    grasp_client.sendGoal(grasp_goal);  
+    bool finished_before_timeout = grasp_client.waitForResult(ros::Duration(30.0));  
     if (finished_before_timeout)
     {
-        actionlib::SimpleClientGoalState state = homing_client.getState();
+        actionlib::SimpleClientGoalState state = grasp_client.getState();
         ROS_INFO("Action finished: %s",state.toString().c_str());
     }
 

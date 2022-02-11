@@ -16,6 +16,6 @@
   <node name="reconfiguration_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="--stopped joint_reconfiguration_pilotato"/>
   <node name="movement_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="--stopped cartesian_movement_controller_demo"/>
   
-  <!-- RUn del manager -->
+  <!-- Run del manager -->
   <node name="demo_manager" pkg="demo_manager" type="demo_manager"/> 
 </launch>
